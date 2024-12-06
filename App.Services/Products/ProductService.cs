@@ -1,5 +1,6 @@
 ﻿using App.Repositories;
 using App.Repositories.Products;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace App.Services.Products
@@ -15,7 +16,27 @@ namespace App.Services.Products
             return new ServiceResult<List<ProductDto>> { Data = productsAsDtos };
         }
 
-        public async Task<ServiceResult<ProductDto>> GetProductByIdAsync(int id)
+        public async Task<ServiceResult<List<ProductDto>>> GetAllListAsync()
+        {
+
+            var products = await productRepository.GetAll().ToListAsync();
+
+            var productsAsDtos = products.Select(p => new ProductDto(p.Id, p.Name, p.Price, p.Stock)).ToList();
+
+            return new ServiceResult<List<ProductDto>> { Data = productsAsDtos };
+         }
+
+
+        public async Task<ServiceResult<List<ProductDto>>> GetPagedAllListAsync(int pageNumber, int pageSize)
+        {
+            var products = await productRepository.GetAll().Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            var productsAsDtos = products.Select(p => new ProductDto(p.Id, p.Name, p.Price, p.Stock)).ToList();
+
+            return new ServiceResult<List<ProductDto>> { Data = productsAsDtos };
+        }
+
+        public async Task<ServiceResult<ProductDto> > GetByIdAsync(int id)
         {
             var product = await productRepository.GetByIdAsync(id);
             if (product is null)
@@ -28,16 +49,18 @@ namespace App.Services.Products
             return ServiceResult<ProductDto>.Success(productsAsDtos!);
         }
 
-        public async Task<ServiceResult<CreateProductResponse>> CreateProductAsync(CreateProductRequest request)
+        public async Task<ServiceResult<CreateProductResponse>> CreateAsync(CreateProductRequest request)
         {
             var product = new Product { Name = request.Name, Price = request.Price, Stock = request.Stock };
 
             await productRepository.AddAsync(product);
             await unitOfWork.SaveChangesAsync();
-            return ServiceResult<CreateProductResponse>.Success(new CreateProductResponse(product.Id));
+            return ServiceResult<CreateProductResponse>.SuccessAsCreated(new CreateProductResponse(product.Id), $"api/products/{product.Id}");
+
+
         }
 
-        public async Task<ServiceResult> UpdateProductAsync(int Id, UpdateProductRequest request)
+        public async Task<ServiceResult> UpdateAsync(int Id, UpdateProductRequest request)
         {
             var product = await productRepository.GetByIdAsync(Id);
             if (product is null)
@@ -53,7 +76,25 @@ namespace App.Services.Products
             await unitOfWork.SaveChangesAsync();
             return ServiceResult.Success();
         }  
-        public async Task<ServiceResult> DeleteProductAsync(int Id)
+     
+        public async Task<ServiceResult> UpdateStockAsync(UpdateProductStcokRequest request)
+        {
+            var product = await productRepository.GetByIdAsync(request.ProductId);
+            if (product is null)
+            {
+                return ServiceResult.Fail("Product not found", HttpStatusCode.NotFound);
+            }
+
+            product.Stock = request.Stock;
+
+            productRepository.Update(product);
+            await unitOfWork.SaveChangesAsync();
+            return ServiceResult.Success();
+        }  // Add this method to the IProductService interface (App.Services.Products/IProductService.cs
+
+
+        
+        public async Task<ServiceResult> DeleteAsync(int Id)
         {
             var product = await productRepository.GetByIdAsync(Id);
             if (product is null)
