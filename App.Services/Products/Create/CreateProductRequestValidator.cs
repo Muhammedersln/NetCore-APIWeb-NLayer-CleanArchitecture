@@ -1,8 +1,8 @@
 ﻿using FluentValidation;
 
-namespace App.Services.Products
+namespace App.Services.Products.Create
 {
-    public class CreateProductRequestValidator:AbstractValidator<CreateProductRequest>
+    public class CreateProductRequestValidator : AbstractValidator<CreateProductRequest>
     {
         private readonly IProductService _productService;
         public CreateProductRequestValidator(IProductService productService)
@@ -15,7 +15,7 @@ namespace App.Services.Products
             RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than 0");
 
             RuleFor(x => x.Stock).InclusiveBetween(1, 100).WithMessage("Stock must be between 1-100");
-            
+
         }
 
     }
