@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using App.Repositories.Categories;
 
 namespace App.Repositories.Extensions
 {
@@ -22,7 +23,7 @@ namespace App.Repositories.Extensions
 
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             return services;
